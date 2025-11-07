@@ -1,25 +1,28 @@
-export default async function handler(req, res) {
-  const targetUrl = "http://thesystem.co.th/php/store/scan.php";
+import express from "express";
+import fetch from "node-fetch";
 
+const app = express();
+app.use(express.urlencoded({ extended: true }));
+
+app.get("/", (req, res) => {
+  res.send("Proxy is working! Use POST /proxy to forward data.");
+});
+
+app.post("/proxy", async (req, res) => {
   try {
-    // อ่านค่าที่ส่งมาจาก Apps Script
-    const body = req.body; 
-    const params = new URLSearchParams(body);
-
-    // ส่งต่อไปยังเว็บปลายทาง
-    const response = await fetch(targetUrl, {
+    const resp = await fetch("http://thesystem.co.th/php/store/scan.php", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-        "User-Agent": "Mozilla/5.0",
-      },
-      body: params.toString(),
+      body: new URLSearchParams(req.body),
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
     });
 
-    const text = await response.text();
-    res.setHeader("Content-Type", "text/html; charset=utf-8");
-    res.status(200).send(text);
+    const text = await resp.text();
+    res.send(text);
   } catch (err) {
-    res.status(500).json({ error: err.toString() });
+    res.status(500).send("Error: " + err.message);
   }
-}
+});
+
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, () => console.log(`Proxy running on port ${PORT}`));
+
