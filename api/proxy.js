@@ -1,14 +1,15 @@
 export default async function handler(req, res) {
-  const targetUrl = encodeURIComponent("http://thesystem.co.th/php/store/scan.php?" + new URLSearchParams(req.query));
-  const proxyUrl = `https://api.allorigins.win/get?url=${targetUrl}`;
-
+  const targetUrl = 'https://thesystem.co.th/php/store/scan.php';
   try {
-    const response = await fetch(proxyUrl);
-    const data = await response.json();
+    const response = await fetch(targetUrl, {
+      method: req.method,
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: req.method === 'POST' ? new URLSearchParams(await req.text()) : undefined
+    });
 
-    res.setHeader("Content-Type", "text/html; charset=utf-8");
-    res.status(200).send(data.contents);
-  } catch (err) {
-    res.status(500).json({ error: err.toString() });
+    const data = await response.text();
+    res.status(200).send(data);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 }
